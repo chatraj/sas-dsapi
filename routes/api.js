@@ -33,6 +33,8 @@ router.get('/class', cmaster.classlist);
 
 router.get('/feehead', cmaster.feeheadlist);
 
+router.get('/transportfee', cmaster.distancetype);
+
 router.get('/class/feehead/:id', cmaster.classwisefeehead);
 
 /* Fee Management */

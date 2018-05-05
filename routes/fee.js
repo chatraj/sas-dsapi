@@ -3,6 +3,8 @@
  */
 var db = require("../lib/sasdb");
 
+var objUtil = require('./util');
+
 exports.collection = function(req, res) {
 	//getStudentList(req, res);
 	var dbc = db.getDBCon();
@@ -25,7 +27,8 @@ exports.collection = function(req, res) {
 exports.dues = function(req, res) {
 	//getStudentList(req, res);
 	var dbc = db.getDBCon();
-		dbc.query('select type, sum(amount) as amount from `trx_student_fee` where ssid = '+ req.params.ssid + ' and month < ' + req.params.month + ' group by type', function(err, rows) {
+	var cMonth = objUtil.getCurrentMonth();
+		dbc.query('select type, sum(amount) as amount from `trx_student_fee` where ssid = '+ req.params.ssid + ' and month < ' + cMonth + ' group by type', function(err, rows) {
 			//connection.end();
 			if (!err){
                 console.log('Getting previous fee record for a student');
@@ -39,11 +42,15 @@ exports.dues = function(req, res) {
 					paymentAmt = feerec.amount
 
 				});
-				dbc.query('select mf.feehead, tsf.amount from `trx_student_fee` tsf, `ms_feehead` mf where tsf.fhid = mf.fhid and ssid = '+ req.params.ssid + ' and month = ' + req.params.month, function(err, curfees) {
+				dbc.query('select mf.feehead, tsf.amount from `trx_student_fee` tsf, `ms_feehead` mf where tsf.fcode = mf.fcode and ssid = '+ req.params.ssid + ' and month = ' + cMonth, function(err, curfees) {
 					//connection.end();
 					if (!err){
 						console.log('Getting current month fee record for a student');
-						res.send({"prevdues": payableAmt - paymentAmt, "curfees":curfees});
+						curtotal = 0;
+						curfees.forEach(function(frec){
+							curtotal = curtotal + frec.amount;
+						});
+						res.send({"prevdues": payableAmt - paymentAmt, "curtotal": curtotal , "curfees":curfees});
 					}
 					else{
 						console.log('Error while performing Query.');
@@ -61,7 +68,7 @@ exports.payment = function(req, res) {
 	//getStudentList(req, res);
 	var dbc = db.getDBCon();
 
-  		dbc.query('SELECT * from trx_student_fee where ssid = ' + req.params.id + " and type = 'Debit'", function(err, rows) {
+  		dbc.query('SELECT cdate, amount from trx_student_fee where ssid = ' + req.params.id + " and type = 'D'", function(err, rows) {
 			//connection.end();
 			if (!err){
                 console.log('Getting payment record for a student');

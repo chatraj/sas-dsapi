@@ -7,7 +7,6 @@ const bodyParser = require('body-parser');
 
 // Get our API routes
 const api = require('./routes/api');
-
 const sasdb = require('./lib/sasdb');
 
 const app = express();
@@ -17,11 +16,10 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 var allowCrossDomain = function(req, res, next) {
-	console.log(req.get('origin'));
-	res.header('Access-Control-Allow-Origin', req.get('origin'));
+	//console.log(req.get('origin'));
+		res.header('Access-Control-Allow-Origin', req.get('origin'));
     res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
     res.header('Access-Control-Allow-Headers', 'Content-Type');
-
     next();
 }
 
@@ -29,8 +27,6 @@ app.use(allowCrossDomain);
 
 //initDBConnection();
 sasdb.createDBCon();
-
-//initialize workspace;
 
 // set rootPath
 app.use(function(req, res, next) {
@@ -43,13 +39,13 @@ app.use('/api', api);
 
 // Catch all other routes and return the index file
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/index.html'));
+  res.send('not valid request');
 });
 
 /**
  * Get port from environment and store in Express.
  */
-const port = process.env.PORT || '3001';
+const port = process.env.PORT || '3000';
 
 app.set('port', port);
 
