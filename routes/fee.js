@@ -8,9 +8,9 @@ var objUtil = require('./util');
 exports.collection = function(req, res) {
 	//getStudentList(req, res);
 	var dbc = db.getDBCon();
-    console.log(req.body);
-
-    dbc.query("insert into trx_student_fee (ssid, type, amount) values (" + req.body.ssid + ", 'D', "+ req.body.amount +")", function(err, result) {
+  var cMonth = objUtil.getCurrentMonth();
+		console.log(req.body);
+    dbc.query("insert into trx_student_fee (ssid, type, month, amount) values (" + req.body.ssid + ", 'D', " + cMonth + ", "+ req.body.amount +")", function(err, result) {
         //connection.end();
         if (!err){
             console.log('Payment collection row inserted' + result);
@@ -42,15 +42,19 @@ exports.dues = function(req, res) {
 					paymentAmt = feerec.amount
 
 				});
-				dbc.query('select mf.feehead, tsf.amount from `trx_student_fee` tsf, `ms_feehead` mf where tsf.fcode = mf.fcode and ssid = '+ req.params.ssid + ' and month = ' + cMonth, function(err, curfees) {
+				dbc.query('select mf.feehead, tsf.type, tsf.amount from `trx_student_fee` tsf left join `ms_feehead` mf on tsf.fcode = mf.fcode where ssid = '+ req.params.ssid + ' and month = ' + cMonth, function(err, curfees) {
 					//connection.end();
 					if (!err){
 						console.log('Getting current month fee record for a student');
 						curtotal = 0;
+						curpmt = 0;
 						curfees.forEach(function(frec){
-							curtotal = curtotal + frec.amount;
+							if (frec.type == 'C')
+								curtotal = curtotal + frec.amount;
+							else
+								curpmt = curpmt + frec.amount;
 						});
-						res.send({"prevdues": payableAmt - paymentAmt, "curtotal": curtotal , "curfees":curfees});
+						res.send({"prevdues": payableAmt - paymentAmt, "curtotal": curtotal , "curpmt": curpmt , "curfees":curfees});
 					}
 					else{
 						console.log('Error while performing Query.');
